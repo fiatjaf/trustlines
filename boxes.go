@@ -74,10 +74,10 @@ func writeInbox(w http.ResponseWriter, r *http.Request) {
 		// we'll just accept that.
 		switch objType {
 		case "https://trustlin.es/ns#Debt":
-            if !belongsHere(objTarget) {
-err = errors.New("target doesn't belong here")
-goto end
-                }
+			if !belongsHere(objTarget) {
+				err = errors.New("target doesn't belong here")
+				goto end
+			}
 
 			_, err = pg.Exec(`
 INSERT INTO debts
@@ -99,6 +99,11 @@ INSERT INTO interest_charges
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             `, objId, objSource, objTarget, objCurrency, objAmount, objDescription,
 				objTimestamp, objSignature, objActualDate, objOverAmount)
+		}
+
+	case "Update":
+		switch objType {
+		case "https://trustlin.es/ns#Trustline":
 		}
 
 	case "Announce":
@@ -130,37 +135,49 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 				}
 			}
 
+			// create new hashed contract, now targetting next
 			_, err = pg.Exec(`
 INSERT INTO hashed_contracts
 (id, source, target, currency, amount, description, t, signature,
- timeout, cancelled, hash, next, preimage)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+ timeout, cancelled, hash, preimage)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+            `)
+
+			_, err = pg.Exec(`
+INSERT INTO hashed_contracts
+(id, source, target, currency, amount, description, t, signature,
+ timeout, cancelled, hash, preimage)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             `, objId, objSource, objTarget, objCurrency, objAmount, objDescription,
 				objTimestamp, objSignature,
-				objTimeout, objCancelled, objHash, objNext,
+				objTimeout, objCancelled, objHash,
 				preimage)
 
 			if err != nil {
 				log.Warn().Str("id", objId).
-					Msg("")
-				http.Error(w, "", 500)
+					Msg("failed to save hashed contract to database")
+				http.Error(w, "failed to save hashed contract to database", 500)
 				return
 			}
 
+			objUri := "https://" + s.Hostname + "/object/" + objId
+
 			if preimage == "" {
 				// get preimage from next and then reply with it
-                post(objNext, map[string]interface{}{
-                    "@context": "",
-                    "type": "Announce",
-                    "object": "https://" + s.Hostname + "/" + 
-                })
+				post(objNext, map[string]interface{}{
+					"@context": "https://www.w3.org/ns/activitystreams",
+					"type":     "Announce",
+					"object":   objId,
+				})
 			}
+
+			w.Header.Set("Location")
 
 			if preimage != "" {
 				// reply with the preimage
 			} else {
-                // it's an error? we should wait for the hashed contract timeout, right?
-            }
+				// it's an error? we should wait for the hashed contract timeout, right?
+			}
 		}
 
 	case "Offer":
@@ -175,9 +192,9 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 
 end:
 	if err != nil {
-				http.Error(w, err.Error(), 500)
-log.Warn().Err(err).Msg("")
-return
+		http.Error(w, err.Error(), 500)
+		log.Warn().Err(err).Msg("")
+		return
 	}
 }
 

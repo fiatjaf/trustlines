@@ -49,9 +49,19 @@ CREATE TABLE hashed_contracts (
   cancelled boolean NOT NULL DEFAULT false,
   hash text NOT NULL, -- the creditor possessing this makes the debt a reality
   preimage TEXT NOT NULL,
-  next TEXT, -- the uri of the next actor in the chain of hashed contracts
-             -- (if source is B and target is A in A->B->C, then this will be C)
+  next TEXT, -- the uri of the next contract in the chain of hashed contracts
+             -- (if source is B and target is A in A->B->C, then this will be C the
+             --  the contract involving B and C).
+  prev TEXT, -- (see above)
 
   CHECK (cancelled = true AND t + timeout < now())
 ) INHERITS (money_transfers);
 
+CREATE TABLE trustlines (
+  truster text NOT NULL, -- someone@some.where
+  trusted text NOT NULL, -- someone@some.where
+  currency text NOT NULL,
+  amount text NOT NULL,
+
+  UNIQUE(truster, trusted, currency)
+);

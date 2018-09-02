@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"net/http"
@@ -23,6 +24,31 @@ func get(u string) (gjson.Result, error) {
 		URL:    urlp,
 		Header: header,
 	})
+
+	if err != nil {
+		return emptyResult, err
+	}
+
+	return handle(resp)
+}
+
+func post(u string, data interface{}) (gjson.Result, error) {
+	urlp, _ := url.Parse(u)
+	header := http.Header{}
+	header.Set("Accept", "application/activity+json")
+
+	req := &http.Request{
+		Method: "POST",
+		URL:    urlp,
+		Header: header,
+	}
+
+	err := json.NewEncoder(req.Body).Encode(data)
+	if err != nil {
+		return emptyResult, err
+	}
+
+	resp, err := client.Do(req)
 
 	if err != nil {
 		return emptyResult, err
