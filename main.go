@@ -87,14 +87,8 @@ func main() {
 		})
 
 	r.Path(webfinger.WebFingerPath).HandlerFunc(wf.Webfinger)
-	r.Path("/activity/{id}").Methods("GET").HandlerFunc(serveKind("activities"))
-	r.Path("/object/{id}").Methods("GET").HandlerFunc(serveKind("objects"))
-	r.Path("/public-key").Methods("GET").HandlerFunc(serveKey)
-	r.Path("/~/{id}").Methods("GET").HandlerFunc(serveUser)
-	r.Path("/inbox").Methods("POST").HandlerFunc(writeInbox)
-	r.Path("/inbox").Methods("GET").HandlerFunc(readInbox)
-	r.Path("/outbox").Methods("POST").HandlerFunc(writeOutbox)
-	r.Path("/outbox").Methods("GET").HandlerFunc(readOutbox)
+	r.Path("/transfer").Methods("POST").HandlerFunc(receiveTransfer)
+	r.Path("/transfer/ack").Methods("POST").HandlerFunc(receiveTransferAck)
 
 	// start the server
 	srv := &http.Server{

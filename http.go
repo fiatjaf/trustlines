@@ -1,71 +1,39 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
-	"net/http"
-	"net/url"
-	"time"
 
 	"github.com/tidwall/gjson"
 )
 
-var client = http.Client{Timeout: time.Second * 6}
-var emptyResult = gjson.Result{}
+func getBytes(u string) ([]byte, error) {
+	resp, err := client.Get(u)
+	if err != nil {
+		return nil, err
+	}
+	return ioutil.ReadAll(resp.Body)
+}
 
 func get(u string) (gjson.Result, error) {
-	urlp, _ := url.Parse(u)
-	header := http.Header{}
-	header.Set("Accept", "application/activity+json")
-
-	resp, err := client.Do(&http.Request{
-		Method: "GET",
-		URL:    urlp,
-		Header: header,
-	})
-
+	resp, err := client.Get(u)
 	if err != nil {
 		return emptyResult, err
 	}
-
-	return handle(resp)
+	return parse(resp.Body)
 }
 
 func post(u string, data interface{}) (gjson.Result, error) {
-	urlp, _ := url.Parse(u)
-	header := http.Header{}
-	header.Set("Accept", "application/activity+json")
-
-	req := &http.Request{
-		Method: "POST",
-		URL:    urlp,
-		Header: header,
-	}
-
-	err := json.NewEncoder(req.Body).Encode(data)
+	buffer := &bytes.Buffer{}
+	err := json.NewEncoder(buffer).Encode(data)
 	if err != nil {
 		return emptyResult, err
 	}
 
-	resp, err := client.Do(req)
-
+	resp, err := client.Post(u, "application/json", buffer)
 	if err != nil {
 		return emptyResult, err
 	}
-
-	return handle(resp)
-}
-
-func handle(resp *http.Response) (gjson.Result, error) {
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return emptyResult, err
-	}
-
-	if gjson.ValidBytes(b) == false {
-		return emptyResult, errors.New("invalid response: " + string(b))
-	}
-
-	return gjson.ParseBytes(b), nil
+	return parse(resp.Body)
 }
