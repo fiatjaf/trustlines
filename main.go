@@ -14,7 +14,6 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/mrjones/oauth"
 	"github.com/rs/zerolog"
-	"github.com/sheenobu/go-webfinger"
 	"gopkg.in/redis.v5"
 )
 
@@ -48,10 +47,6 @@ func main() {
 
 	// cookie store
 	store = sessions.NewCookieStore([]byte(s.SecretKey))
-
-	// webfinger
-	var wf = webfinger.Default(wfresolver{})
-	wf.NoTLSHandler = nil
 
 	// keys
 	s.PublicKey = strings.Replace(s.PublicKey, "\\n", "\n", -1)
