@@ -1,9 +1,8 @@
 package main
 
 import (
+	"database/sql"
 	"errors"
-	"io"
-	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
@@ -14,24 +13,53 @@ import (
 var client = http.Client{Timeout: time.Second * 6}
 var emptyResult = gjson.Result{}
 
-func belongsHere(actor string) bool {
-	u, err := url.Parse(actor)
-	if err != nil {
-		return false
-	}
-
-	return u.Host == s.Hostname
+func belongsHere(o string) bool {
+	return extractServer(o) == s.Hostname
 }
 
-func parse(data io.Reader) (gjson.Result, error) {
-	b, err := ioutil.ReadAll(data)
+func extractServer(o string) string {
+	u, _ := url.Parse(o)
+	return u.Host
+}
+
+func checkTimestamps(t Timestamps) error {
+	if t.StThere.Add(time.Second * 15).Before(time.Now()) {
+		return errors.New("too old")
+	}
+
+	return nil
+}
+
+func availableTrust(from, to string, currency string) (int, error) {
+	var total int
+	err := pg.Get(&total, `
+SELECT amount
+FROM trustlines
+WHERE truster = $1 AND trusted = $2 AND currency = $3
+    `, from, to, currency)
 	if err != nil {
-		return emptyResult, err
+		if err == sql.ErrNoRows {
+			return 0, nil
+		}
+		return 0, err
 	}
 
-	if gjson.ValidBytes(b) == false {
-		return emptyResult, errors.New("got invalid content: " + string(b))
+	var used int
+	err = pg.Get(&used, `
+SELECT sum(v)
+FROM (
+  SELECT amount AS v
+  FROM transfers
+  WHERE currency = $3 AND debtor = $1 AND creditor = $2
+UNION ALL
+  SELECT -amount AS v
+  FROM transfers
+  WHERE currency = $3 AND debtor = $2 AND creditor = $1
+) AS m
+    `)
+	if err != nil {
+		return 0, err
 	}
 
-	return gjson.ParseBytes(b), nil
+	return total - used, nil
 }

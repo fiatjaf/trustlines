@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rsa"
 	"net/http"
 	"net/url"
 	"os"
@@ -34,6 +35,7 @@ var c *oauth.Consumer
 var pg *sqlx.DB
 var rds *redis.Client
 var store sessions.Store
+var privateKey *rsa.PrivateKey
 var log = zerolog.New(os.Stderr).Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
 func main() {
@@ -51,6 +53,10 @@ func main() {
 	// keys
 	s.PublicKey = strings.Replace(s.PublicKey, "\\n", "\n", -1)
 	s.PrivateKey = strings.Replace(s.PrivateKey, "\\n", "\n", -1)
+	privateKey, err = decodePrivateKeyPEM([]byte(s.PrivateKey))
+	if err != nil {
+		log.Fatal().Err(err).Msg("couldn't decode private key")
+	}
 
 	// postgres connection
 	pg, err = sqlx.Connect("postgres", s.PostgresURL)
@@ -81,7 +87,7 @@ func main() {
 			return
 		})
 
-	r.Path(webfinger.WebFingerPath).HandlerFunc(wf.Webfinger)
+	r.Path("/public-key").Methods("GET").HandlerFunc(servePublicKey)
 	r.Path("/transfer").Methods("POST").HandlerFunc(receiveTransfer)
 	r.Path("/transfer/ack").Methods("POST").HandlerFunc(receiveTransferAck)
 
