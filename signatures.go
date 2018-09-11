@@ -9,24 +9,10 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
-	"strings"
 )
 
 func checkSignature(s Signable) error {
-	p := strings.Split(s.signerId(), "@")
-	server := p[1]
-
-	resp, err := http.Get("https://" + server + "/public-key")
-	if err != nil {
-		return err
-	}
-
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	key, err := decodePublicKeyPEM(b)
+	key, err := fetchPublicKey(extractServer(s.signerId()))
 	if err != nil {
 		return err
 	}
@@ -55,6 +41,20 @@ func sign(s Signable) (string, error) {
 	}
 
 	return string(signature), nil
+}
+
+func fetchPublicKey(server string) (*rsa.PublicKey, error) {
+	resp, err := http.Get("https://" + server + "/public-key")
+	if err != nil {
+		return nil, err
+	}
+
+	b, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return decodePublicKeyPEM(b)
 }
 
 func decodePublicKeyPEM(data []byte) (*rsa.PublicKey, error) {

@@ -109,6 +109,20 @@ func (n *Next) decode(enc string) error {
 	return nil
 }
 
+func (n *Next) encode(key *rsa.PublicKey) (string, error) {
+	plaintext, err := json.Marshal(n)
+	if err != nil {
+		return "", err
+	}
+
+	enc, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, key, plaintext, []byte{})
+	if err != nil {
+		return "", err
+	}
+
+	return hex.EncodeToString(enc), nil
+}
+
 type Ack struct {
 	Creditor   string `db:"creditor" json:"creditor"`
 	TransferId string `db:"transfer_id" json:"transfer_id"`

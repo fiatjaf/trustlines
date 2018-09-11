@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"net/url"
+	"strings"
 	"time"
 
 	"github.com/tidwall/gjson"
@@ -13,13 +13,30 @@ import (
 var client = http.Client{Timeout: time.Second * 6}
 var emptyResult = gjson.Result{}
 
-func belongsHere(o string) bool {
-	return extractServer(o) == s.Hostname
+func parseUser(u string) (res struct {
+	user   string
+	server string
+}) {
+	parts := strings.Split(u, "@")
+	if len(parts) != 2 {
+		return
+	}
+	res.user = parts[0]
+	res.server = parts[1]
+	return
 }
 
-func extractServer(o string) string {
-	u, _ := url.Parse(o)
-	return u.Host
+func extractServer(o string) string { return parseUser(o).server }
+func extractUser(o string) string   { return parseUser(o).user }
+
+func belongsHere(o string) bool {
+	if extractServer(o) != s.Hostname {
+		return false
+	}
+
+	var u string
+	err := pg.Get(&u, `SELECT id FROM users WHERE id = $1`, extractUser(o))
+	return err == nil
 }
 
 func checkTimestamps(t Timestamps) error {
