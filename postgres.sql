@@ -1,7 +1,5 @@
 CREATE TABLE users (
-  id text PRIMARY KEY,
-  email text UNIQUE NOT NULL,
-  passwordhash text UNIQUE NOT NULL
+  id text PRIMARY KEY
 );
 
 drop table money_transfers;

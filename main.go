@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fiatjaf/accountd"
 	"github.com/gorilla/mux"
-	"github.com/gorilla/sessions"
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
@@ -32,9 +32,9 @@ var err error
 var s Settings
 var r *mux.Router
 var c *oauth.Consumer
+var d accountd.Client
 var pg *sqlx.DB
 var rds *redis.Client
-var store sessions.Store
 var privateKey *rsa.PrivateKey
 var log = zerolog.New(os.Stderr).Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
@@ -47,8 +47,8 @@ func main() {
 	zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	log = log.With().Timestamp().Logger()
 
-	// cookie store
-	store = sessions.NewCookieStore([]byte(s.SecretKey))
+	// accountd
+	d = accountd.NewClient()
 
 	// keys
 	s.PublicKey = strings.Replace(s.PublicKey, "\\n", "\n", -1)
@@ -87,9 +87,14 @@ func main() {
 			return
 		})
 
+	// federation protocol
 	r.Path("/public-key").Methods("GET").HandlerFunc(servePublicKey)
 	r.Path("/transfer").Methods("POST").HandlerFunc(receiveTransfer)
 	r.Path("/transfer/ack").Methods("POST").HandlerFunc(receiveTransferAck)
+
+	// api
+	r.Path("/create-debt").Methods("POST").HandlerFunc(handleCreateDebt)
+	r.Path("/send-payment").Methods("POST").HandlerFunc(handleSendPayment)
 
 	// start the server
 	srv := &http.Server{
