@@ -13,7 +13,6 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/kelseyhightower/envconfig"
 	_ "github.com/lib/pq"
-	"github.com/mrjones/oauth"
 	"github.com/rs/zerolog"
 	"gopkg.in/redis.v5"
 )
@@ -31,7 +30,6 @@ type Settings struct {
 var err error
 var s Settings
 var r *mux.Router
-var c *oauth.Consumer
 var d accountd.Client
 var pg *sqlx.DB
 var rds *redis.Client
