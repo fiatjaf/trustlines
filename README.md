@@ -71,3 +71,11 @@ other questions
   Maybe you can, that's what [offst](https://github.com/freedomlayer/offst/issues/196) does, but they have another problem: payments never expire. So for the what-if question 1, for example, no one would ever know what happened or if the payment was committed or not. All money would be locked forever in case of a faulty node. No one would know what node in the network was malicious if there were one.
 
   [LedgerLoops](https://ledgerloops.com/) uses "hashlocked IOUs" (just like Offst, the first iterations of [Interledger](https://interledger.org/) and probably [Settle](https://github.com/spolu/settle)) which are conceptually the same as our `PREPARE` messages, but they don't even acknowledge the existence of the problem of the decentralized commit. Apparently every time someone comes up with this same idea they think they could do just as the Lightning Network does. The Lightning Network, however, only survives with their HTLCs because they're also timelocked and that timelock is enforceable in a central trustworthy commit registry: the Bitcoin blockchain.
+
+  2. **How is this different from [Ripple's Blockchain Commit Method](http://ripple.ryanfugger.com/Protocol/BlockChainCommitMethod.html)?**
+
+  The difference is that here we don't need to publish a special transaction to the Bitcoin blockchain and thus not pay a handful of dollars, thus we are able to process tiny amounts with ease.
+
+  3. **I have questions on how is this going to work: this thing about IOUs, credit lines, owing money to friends to make payments.**
+
+  This is a topic much discussed in many places on the internet. Still, the questions are very much always the same and most of them are already covered in the [old Ripple FAQ](http://ripple.ryanfugger.com/Main/FAQ.html).
