@@ -3,7 +3,7 @@ trustlines
 
 The **trustlines** protocol for decentralized payments based on mutual credit channels and IOUs.
 
-Yes, there have been [a lot of attempts](https://listhub.xyz/fiatjaf/mutual-credit) to make this work since the old [Ryan Fugger's Ripple concept](http://ripple.ryanfugger.com/). All these attempts are unsound because they fail to solve the decentralized commit problem.
+Yes, there have been [a lot of attempts](https://michielbdejong.com/blog/21.html) to make this work since the old [Ryan Fugger's Ripple concept](http://ripple.ryanfugger.com/). All these attempts are unsound because they fail to solve the decentralized commit problem.
 
 **trustlines** solves that in a very simple, reliable and free way: using Bitcoin blocks. When you start a trustlines transaction you choose a Bitcoin block height that is likely to be published in the near future, then that transaction becomes bound to it. If that block is published in a reasonable amount of time then all peers involved in the trustlines transaction will acknowledge that it happened.
 
