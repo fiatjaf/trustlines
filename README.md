@@ -47,27 +47,27 @@ what if...?
 
   1. **What if the `PREPARE` messages stop at `B` or `C` and never reach `D`?**
 
-    Since no one has `OK` messages from anyone all peers can happily forget about this failed payment attempt as soon as the target block + timeout arrives. After that point everyone is guaranteed to not have any pending IOU with anyone else.
+  Since no one has `OK` messages from anyone all peers can happily forget about this failed payment attempt as soon as the target block + timeout arrives. After that point everyone is guaranteed to not have any pending IOU with anyone else.
 
   2. **What if the target block is published but `A` hasn't gotten an `OK` message from `B` yet?**
 
-    That doesn't mean the payment is failed or is left uncommitted, just that `A` is not sure yet of what happened. If after its specified timeout it still hasn't gotten an `OK` from `B` then it means the payment has failed, otherwise it can consider the transaction successful at the moment it receives an `OK` from `B`.
+  That doesn't mean the payment is failed or is left uncommitted, just that `A` is not sure yet of what happened. If after its specified timeout it still hasn't gotten an `OK` from `B` then it means the payment has failed, otherwise it can consider the transaction successful at the moment it receives an `OK` from `B`.
 
-    This should be an anomalous situation, as it would mean the payment is taking a lot or the Bitcoin blockchain has experienced a surge in mining or miner luck.
+  This should be an anomalous situation, as it would mean the payment is taking a lot or the Bitcoin blockchain has experienced a surge in mining or miner luck.
 
   3. **What if `C` delays the return of its `OK` message to `B` and then suddenly presents it, after `A`'s `PREPARE` message has already timed out?**
 
-    That will never happen, as `A`'s `PREPARE` message will have a timeout greater than  `B`'s `PREPARE` message, thus `C`'s `OK` will not mean anything to `B` anymore. `B` will not owe anything to `C`.
+  That will never happen, as `A`'s `PREPARE` message will have a timeout greater than  `B`'s `PREPARE` message, thus `C`'s `OK` will not mean anything to `B` anymore. `B` will not owe anything to `C`.
 
   4. **What if `B` refuses to accept `B`'s `OK` message while it's still not timed out just so `B` can claim afterwards that it doesn't owe `C` anything?**
 
-    In that situation, `C` still owes `D`, and `A` doesn't owe `B` anything. The only problem is between `B` and `C`. Since it was `C` who had chosen to trust `B` beforehand there's nothing we can do to save it. `C` is likely then to eat that loss and close its channel with `B`. If `C` goes berserk and decides to not pay `D` after all, again it's a problem between `D` and `C`.
+  In that situation, `C` still owes `D`, and `A` doesn't owe `B` anything. The only problem is between `B` and `C`. Since it was `C` who had chosen to trust `B` beforehand there's nothing we can do to save it. `C` is likely then to eat that loss and close its channel with `B`. If `C` goes berserk and decides to not pay `D` after all, again it's a problem between `D` and `C`.
 
-Other questions
+other questions
 ---------------
 
   1. **If you're relying on trust between peers (see what-if question 4), why can't we eliminate the need for this Bitcoin blockchain stuff?**
 
-    Maybe you can, that's what [offst](https://github.com/freedomlayer/offst/issues/196) does, but they have another problem: payments never expire. So for the what-if question 1, for example, no one would ever know what happened or if the payment was committed or not. All money would be locked forever in case of a faulty node. No one would know what node in the network was malicious if there were one.
+  Maybe you can, that's what [offst](https://github.com/freedomlayer/offst/issues/196) does, but they have another problem: payments never expire. So for the what-if question 1, for example, no one would ever know what happened or if the payment was committed or not. All money would be locked forever in case of a faulty node. No one would know what node in the network was malicious if there were one.
 
-    [LedgerLoops](https://ledgerloops.com/) uses "hashlocked IOUs" (just like Offst, the first iterations of [Interledger](https://interledger.org/) and probably [Settle](https://github.com/spolu/settle)) which are conceptually the same as our `PREPARE` messages, but they don't even acknowledge the existence of the problem of the decentralized commit. Apparently every time someone comes up with this same idea they think they could do just as the Lightning Network does. The Lightning Network, however, only survives with their HTLCs because they're also timelocked and that timelock is enforceable in a central trustworthy commit registry: the Bitcoin blockchain.
+  [LedgerLoops](https://ledgerloops.com/) uses "hashlocked IOUs" (just like Offst, the first iterations of [Interledger](https://interledger.org/) and probably [Settle](https://github.com/spolu/settle)) which are conceptually the same as our `PREPARE` messages, but they don't even acknowledge the existence of the problem of the decentralized commit. Apparently every time someone comes up with this same idea they think they could do just as the Lightning Network does. The Lightning Network, however, only survives with their HTLCs because they're also timelocked and that timelock is enforceable in a central trustworthy commit registry: the Bitcoin blockchain.
