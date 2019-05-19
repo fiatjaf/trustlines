@@ -7,6 +7,8 @@ Yes, there have been [a lot of attempts](https://listhub.xyz/fiatjaf/mutual-cred
 
 **trustlines** solves that in a very simple, reliable and free way: using Bitcoin blocks. When you start a trustlines transaction you choose a Bitcoin block height that is likely to be published in the near future, then that transaction becomes bound to it. If that block is published in a reasonable amount of time then all peers involved in the trustlines transaction will acknowledge that it happened.
 
+Please note that it doesn't require any special transaction to be published to the Bitcoin blockchain and no transaction fees to be paid at all. It just assumes trustlines peers will be able to read the blockchain, not write to it.
+
 Thus trustlines depend on another network and relies on the incentives on that network, but since **Bitcoin** is the world's money and has proven it to be solid enough for the most important world transactions **trustlines** assumes it's fine to rely on that.
 
 Basically we just needed a trustworthy uncensorable clock and Bitcoin is that.
